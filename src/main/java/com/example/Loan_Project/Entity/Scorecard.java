@@ -1,5 +1,6 @@
 package com.example.Loan_Project.Entity;
 
+import com.example.Loan_Project.Enum.ScorecardStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -17,7 +18,11 @@ public class Scorecard {
     private Long scorecardId;
 
     @OneToOne
-    @JoinColumn(name = "loan_application_id", nullable = false, unique = true)
+    @JoinColumn(
+            name = "loan_application_id",
+            nullable = false,
+            unique = true
+    )
     @JsonIgnore
     private LoanApplication loanApplication;
 
@@ -34,9 +39,7 @@ public class Scorecard {
     private BigDecimal requestedAmount;
 
     @Column(nullable = false)
-    private BigDecimal eligibleAmountFrom;
-
-    private BigDecimal eligibleAmountTo;
+    private BigDecimal eligibleAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

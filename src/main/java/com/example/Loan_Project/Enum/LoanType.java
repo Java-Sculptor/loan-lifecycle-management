@@ -1,4 +1,4 @@
-package com.example.Loan_Project.Entity;
+package com.example.Loan_Project.Enum;
 
 public enum LoanType {
 

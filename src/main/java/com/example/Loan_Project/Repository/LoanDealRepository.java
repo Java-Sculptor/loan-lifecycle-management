@@ -1,7 +1,7 @@
 package com.example.Loan_Project.Repository;
 
 import com.example.Loan_Project.Entity.LoanDeal;
-import com.example.Loan_Project.Entity.LoanType;
+import com.example.Loan_Project.Enum.LoanType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

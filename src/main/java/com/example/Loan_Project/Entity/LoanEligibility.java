@@ -1,6 +1,5 @@
 package com.example.Loan_Project.Entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -16,17 +15,21 @@ public class LoanEligibility {
     private Long eligibilityId;
 
     @OneToOne
-    @JoinColumn(name = "loan_application_id", nullable = false, unique = true)
-    @JsonIgnore
+    @JoinColumn(
+            name = "loan_application_id",
+            nullable = false,
+            unique = true
+    )
     private LoanApplication loanApplication;
 
     @Column(nullable = false)
     private Integer cibilScore;
 
     @Column(nullable = false)
-    private BigDecimal eligibleAmountFrom;
+    private String cibilStatus;
 
-    private BigDecimal eligibleAmountTo;
+    @Column(nullable = false)
+    private BigDecimal eligibleAmount;
 
     @Column(nullable = false)
     private Boolean eligible;

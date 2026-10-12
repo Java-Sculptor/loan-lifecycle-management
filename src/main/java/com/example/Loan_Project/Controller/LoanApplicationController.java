@@ -2,6 +2,7 @@ package com.example.Loan_Project.Controller;
 
 import com.example.Loan_Project.DTO.LoanApplicationRequest;
 import com.example.Loan_Project.Entity.LoanApplication;
+import com.example.Loan_Project.Enum.DocumentVerificationStatus;
 import com.example.Loan_Project.Service.LoanApplicationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,9 @@ public class LoanApplicationController {
 
     private final LoanApplicationService loanApplicationService;
 
-    public LoanApplicationController(LoanApplicationService loanApplicationService) {
+    public LoanApplicationController(
+            LoanApplicationService loanApplicationService) {
+
         this.loanApplicationService = loanApplicationService;
     }
 
@@ -41,7 +44,8 @@ public class LoanApplicationController {
             @PathVariable Long customerId) {
 
         return ResponseEntity.ok(
-                loanApplicationService.getApplicationsByCustomer(customerId)
+                loanApplicationService
+                        .getApplicationsByCustomer(customerId)
         );
     }
 
@@ -50,6 +54,20 @@ public class LoanApplicationController {
 
         return ResponseEntity.ok(
                 loanApplicationService.getAllApplications()
+        );
+    }
+
+    @PatchMapping("/{applicationId}/document-verification")
+    public ResponseEntity<LoanApplication> updateDocumentVerification(
+            @PathVariable Long applicationId,
+            @RequestParam DocumentVerificationStatus status) {
+
+        return ResponseEntity.ok(
+                loanApplicationService
+                        .updateDocumentVerificationStatus(
+                                applicationId,
+                                status
+                        )
         );
     }
 }

@@ -1,7 +1,7 @@
 package com.example.Loan_Project.Controller;
 
 import com.example.Loan_Project.Entity.LoanDeal;
-import com.example.Loan_Project.Entity.LoanType;
+import com.example.Loan_Project.Enum.LoanType;
 import com.example.Loan_Project.Service.LoanDealService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

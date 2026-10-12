@@ -1,11 +1,15 @@
 package com.example.Loan_Project.ServiceImpl;
 
+import com.example.Loan_Project.Entity.CibilEligibilityRule;
 import com.example.Loan_Project.Entity.LoanApplication;
-import com.example.Loan_Project.Entity.LoanApplicationStatus;
 import com.example.Loan_Project.Entity.LoanEligibility;
+import com.example.Loan_Project.Enum.DocumentVerificationStatus;
+import com.example.Loan_Project.Enum.LoanApplicationStatus;
+import com.example.Loan_Project.Repository.CibilEligibilityRuleRepository;
 import com.example.Loan_Project.Repository.LoanApplicationRepository;
 import com.example.Loan_Project.Repository.LoanEligibilityRepository;
 import com.example.Loan_Project.Service.LoanEligibilityService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,75 +17,100 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class LoanEligibilityServiceImpl implements LoanEligibilityService {
 
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanEligibilityRepository loanEligibilityRepository;
-
-    public LoanEligibilityServiceImpl(
-            LoanApplicationRepository loanApplicationRepository,
-            LoanEligibilityRepository loanEligibilityRepository) {
-        this.loanApplicationRepository = loanApplicationRepository;
-        this.loanEligibilityRepository = loanEligibilityRepository;
-    }
+    private final CibilEligibilityRuleRepository cibilEligibilityRuleRepository;
 
     @Override
     @Transactional
     public LoanEligibility checkEligibility(Long loanApplicationId) {
 
-        LoanApplication application = loanApplicationRepository.findById(loanApplicationId)
-                .orElseThrow(() -> new RuntimeException("Loan application not found"));
+        LoanApplication application = loanApplicationRepository
+                .findById(loanApplicationId)
+                .orElseThrow(() ->
+                        new RuntimeException("Loan application not found"));
 
         if (loanEligibilityRepository
                 .findByLoanApplicationLoanApplicationId(loanApplicationId)
                 .isPresent()) {
-            throw new RuntimeException("Eligibility already generated for this application");
+
+            throw new RuntimeException(
+                    "Eligibility already checked for this application");
+        }
+
+        if (application.getDocumentVerificationStatus() == null ||
+                application.getDocumentVerificationStatus()
+                        == DocumentVerificationStatus.PENDING) {
+
+            throw new RuntimeException(
+                    "Document verification is pending");
+        }
+
+        if (application.getDocumentVerificationStatus()
+                == DocumentVerificationStatus.REJECTED) {
+
+            throw new RuntimeException(
+                    "Document verification rejected");
         }
 
         Integer cibilScore = application.getCibilScore();
 
-        LoanEligibility eligibility = new LoanEligibility();
+        if (cibilScore == null) {
+            throw new RuntimeException(
+                    "CIBIL score is not available");
+        }
+
+        BigDecimal requestedAmount =
+                application.getRequestedAmount();
+
+        if (requestedAmount == null) {
+            throw new RuntimeException(
+                    "Requested loan amount is not available");
+        }
+
+        CibilEligibilityRule rule =
+                cibilEligibilityRuleRepository
+                        .findMatchingRule(cibilScore)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "No CIBIL eligibility rule found for score: "
+                                                + cibilScore));
+
+        LoanEligibility eligibility =
+                new LoanEligibility();
 
         eligibility.setLoanApplication(application);
         eligibility.setCibilScore(cibilScore);
+        eligibility.setCibilStatus(rule.getStatus());
+        eligibility.setEligibleAmount(rule.getEligibleAmount());
         eligibility.setEvaluatedAt(LocalDateTime.now());
 
-        setEligibilityRange(eligibility, cibilScore);
+        boolean isEligible =
+                calculateEligibility(
+                        cibilScore,
+                        requestedAmount,
+                        rule);
 
-        BigDecimal requestedAmount = application.getRequestedAmount();
-        BigDecimal fromAmount = eligibility.getEligibleAmountFrom();
-        BigDecimal toAmount = eligibility.getEligibleAmountTo();
+        eligibility.setEligible(isEligible);
 
-        if (cibilScore < 650) {
+        if (isEligible) {
 
-            eligibility.setEligible(false);
-            eligibility.setRemarks("Reject - CIBIL score is below 650");
-            application.setStatus(LoanApplicationStatus.NOT_ELIGIBLE);
-
-        } else if (toAmount == null && requestedAmount.compareTo(fromAmount) >= 0) {
-
-            eligibility.setEligible(true);
             eligibility.setRemarks(
-                    "Excellent - Customer is eligible for loan amount above 1 crore"
-            );
-            application.setStatus(LoanApplicationStatus.ELIGIBLE);
+                    "Customer is eligible for the requested loan amount");
 
-        } else if (requestedAmount.compareTo(fromAmount) >= 0
-                && requestedAmount.compareTo(toAmount) <= 0) {
-
-            eligibility.setEligible(true);
-            eligibility.setRemarks(
-                    "Customer is eligible for the requested loan amount"
-            );
-            application.setStatus(LoanApplicationStatus.ELIGIBLE);
+            application.setStatus(
+                    LoanApplicationStatus.ELIGIBLE);
 
         } else {
 
-            eligibility.setEligible(false);
             eligibility.setRemarks(
-                    "Requested amount is outside the eligible loan amount range"
-            );
-            application.setStatus(LoanApplicationStatus.NOT_ELIGIBLE);
+                    "Customer is not eligible for the requested loan amount");
+
+            application.setStatus(
+                    LoanApplicationStatus.NOT_ELIGIBLE);
         }
 
         loanApplicationRepository.save(application);
@@ -89,73 +118,59 @@ public class LoanEligibilityServiceImpl implements LoanEligibilityService {
         return loanEligibilityRepository.save(eligibility);
     }
 
-    private void setEligibilityRange(LoanEligibility eligibility, Integer cibilScore) {
-
-        if (cibilScore >= 900) {
-
-            eligibility.setEligibleAmountFrom(
-                    BigDecimal.valueOf(10000000)
-            );
-
-            eligibility.setEligibleAmountTo(null);
-
-        } else if (cibilScore >= 800) {
-
-            eligibility.setEligibleAmountFrom(
-                    BigDecimal.valueOf(7500000)
-            );
-
-            eligibility.setEligibleAmountTo(
-                    BigDecimal.valueOf(10000000)
-            );
-
-        } else if (cibilScore >= 750) {
-
-            eligibility.setEligibleAmountFrom(
-                    BigDecimal.valueOf(5000000)
-            );
-
-            eligibility.setEligibleAmountTo(
-                    BigDecimal.valueOf(7500000)
-            );
-
-        } else if (cibilScore >= 700) {
-
-            eligibility.setEligibleAmountFrom(
-                    BigDecimal.valueOf(2500000)
-            );
-
-            eligibility.setEligibleAmountTo(
-                    BigDecimal.valueOf(5000000)
-            );
-
-        } else if (cibilScore >= 650) {
-
-            eligibility.setEligibleAmountFrom(
-                    BigDecimal.valueOf(1000000)
-            );
-
-            eligibility.setEligibleAmountTo(
-                    BigDecimal.valueOf(2500000)
-            );
-
-        } else {
-
-            eligibility.setEligibleAmountFrom(
-                    BigDecimal.ZERO
-            );
-
-            eligibility.setEligibleAmountTo(
-                    BigDecimal.ZERO
-            );
-        }
-    }
-
     @Override
     public LoanEligibility getEligibility(Long loanApplicationId) {
 
         return loanEligibilityRepository
-                .findByLoanApplicationLoanApplicationId(loanApplicationId)
-                .orElseThrow(() -> new RuntimeException("Eligibility not found for this application"));
+                .findByLoanApplicationLoanApplicationId(
+                        loanApplicationId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Eligibility not found for this application"));
+    }
+
+    private boolean calculateEligibility(
+            Integer cibilScore,
+            BigDecimal requestedAmount,
+            CibilEligibilityRule rule) {
+
+        if (cibilScore < 650) {
+            return false;
+        }
+
+        BigDecimal eligibleAmount =
+                rule.getEligibleAmount();
+
+        if (cibilScore >= 900) {
+            return requestedAmount.compareTo(
+                    eligibleAmount) > 0;
+        }
+
+        BigDecimal lowerLimit =
+                getLowerLimit(cibilScore);
+
+        return requestedAmount.compareTo(lowerLimit) >= 0
+                && requestedAmount.compareTo(eligibleAmount) <= 0;
+    }
+
+    private BigDecimal getLowerLimit(Integer cibilScore) {
+
+        if (cibilScore >= 800) {
+            return new BigDecimal("7500000");
+        }
+
+        if (cibilScore >= 750) {
+            return new BigDecimal("5000000");
+        }
+
+        if (cibilScore >= 700) {
+            return new BigDecimal("2500000");
+        }
+
+        if (cibilScore >= 650) {
+            return new BigDecimal("1000000");
+        }
+
+        return BigDecimal.ZERO;
     }
 }

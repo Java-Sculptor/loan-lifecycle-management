@@ -1,7 +1,10 @@
 package com.example.Loan_Project.Entity;
 
+import com.example.Loan_Project.Enum.DocumentVerificationStatus;
+import com.example.Loan_Project.Enum.LoanApplicationStatus;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -34,6 +37,10 @@ public class LoanApplication {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoanApplicationStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DocumentVerificationStatus documentVerificationStatus;
 
     @Column(nullable = false)
     private LocalDateTime appliedAt;

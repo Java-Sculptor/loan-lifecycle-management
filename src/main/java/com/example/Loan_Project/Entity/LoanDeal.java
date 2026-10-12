@@ -1,8 +1,8 @@
 package com.example.Loan_Project.Entity;
 
+import com.example.Loan_Project.Enum.LoanType;
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

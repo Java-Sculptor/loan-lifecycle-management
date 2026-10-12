@@ -2,6 +2,7 @@ package com.example.Loan_Project.Service;
 
 import com.example.Loan_Project.DTO.LoanApplicationRequest;
 import com.example.Loan_Project.Entity.LoanApplication;
+import com.example.Loan_Project.Enum.DocumentVerificationStatus;
 
 import java.util.List;
 
@@ -14,4 +15,9 @@ public interface LoanApplicationService {
     List<LoanApplication> getApplicationsByCustomer(Long customerId);
 
     List<LoanApplication> getAllApplications();
+
+    LoanApplication updateDocumentVerificationStatus(
+            Long applicationId,
+            DocumentVerificationStatus status
+    );
 }
