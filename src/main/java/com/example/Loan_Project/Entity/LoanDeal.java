@@ -13,6 +13,7 @@ public class LoanDeal {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "loan_deal_id")
     private Long loanDealId;
 
     @Enumerated(EnumType.STRING)
