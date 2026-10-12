@@ -10,7 +10,6 @@ import com.example.Loan_Project.Repository.CustomerRepository;
 import com.example.Loan_Project.Repository.LoanApplicationRepository;
 import com.example.Loan_Project.Repository.LoanDealRepository;
 import com.example.Loan_Project.Service.LoanApplicationService;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,40 +21,51 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
     private final LoanApplicationRepository loanApplicationRepository;
     private final CustomerRepository customerRepository;
     private final LoanDealRepository loanDealRepository;
-    private final ModelMapper modelMapper;
 
     public LoanApplicationServiceImpl(
             LoanApplicationRepository loanApplicationRepository,
             CustomerRepository customerRepository,
-            LoanDealRepository loanDealRepository,
-            ModelMapper modelMapper) {
+            LoanDealRepository loanDealRepository) {
 
         this.loanApplicationRepository = loanApplicationRepository;
         this.customerRepository = customerRepository;
         this.loanDealRepository = loanDealRepository;
-        this.modelMapper = modelMapper;
     }
 
     @Override
     public LoanApplication applyForLoan(LoanApplicationRequest request) {
 
-        Customer customer = customerRepository.findById(request.getCustomerId())
+        // Step 1: Find the customer
+        Customer customer = customerRepository
+                .findById(request.getCustomerId())
                 .orElseThrow(() ->
                         new RuntimeException("Customer not found"));
 
-        LoanDeal loanDeal = loanDealRepository.findById(request.getLoanDealId())
+        // Step 2: Find the selected loan deal
+        LoanDeal loanDeal = loanDealRepository
+                .findById(request.getLoanDealId())
                 .orElseThrow(() ->
                         new RuntimeException("Loan deal not found"));
 
+        // Step 3: Ensure the loan deal is active
         if (!Boolean.TRUE.equals(loanDeal.getActive())) {
             throw new RuntimeException("Loan deal is not active");
         }
 
-        LoanApplication application =
-                modelMapper.map(request, LoanApplication.class);
+        // Step 4: Create a new application entity
+        LoanApplication application = new LoanApplication();
 
+        // Ensure this entity has no existing primary key
+        application.setLoanApplicationId(null);
+
+        // Step 5: Set the application details
         application.setCustomer(customer);
         application.setLoanDeal(loanDeal);
+        application.setRequestedAmount(request.getRequestedAmount());
+        application.setTenureMonths(request.getTenureMonths());
+        application.setCibilScore(request.getCibilScore());
+
+        // Step 6: Set initial statuses
         application.setStatus(LoanApplicationStatus.APPLIED);
 
         application.setDocumentVerificationStatus(
@@ -64,6 +74,7 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
 
         application.setAppliedAt(LocalDateTime.now());
 
+        // Step 7: Save the new application
         return loanApplicationRepository.save(application);
     }
 
