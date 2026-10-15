@@ -1,3 +1,4 @@
+
 package com.example.Loan_Project.Entity;
 
 import com.example.Loan_Project.Enum.ScorecardStatus;
@@ -18,11 +19,8 @@ public class Scorecard {
     private Long scorecardId;
 
     @OneToOne
-    @JoinColumn(
-            name = "loan_application_id",
-            nullable = false,
-            unique = true
-    )
+    @JoinColumn(name = "loan_application_id",
+            nullable = false, unique = true)
     @JsonIgnore
     private LoanApplication loanApplication;
 
@@ -35,10 +33,11 @@ public class Scorecard {
     @Column(nullable = false)
     private String loanType;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal requestedAmount;
 
-    @Column(nullable = false)
+    @Column(name = "eligible_amount",
+            nullable = false, precision = 18, scale = 2)
     private BigDecimal eligibleAmount;
 
     @Enumerated(EnumType.STRING)

@@ -1,3 +1,4 @@
+
 package com.example.Loan_Project.Entity;
 
 import com.example.Loan_Project.Enum.DocumentVerificationStatus;
@@ -34,6 +35,18 @@ public class LoanApplication {
     @Column(nullable = false)
     private Integer cibilScore;
 
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "bank_account_number")
+    private String bankAccountNumber;
+
+    @Column(name = "ifsc_code")
+    private String ifscCode;
+
+    @Column(name = "emi_day")
+    private Integer emiDay;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoanApplicationStatus status;
@@ -44,4 +57,7 @@ public class LoanApplication {
 
     @Column(nullable = false)
     private LocalDateTime appliedAt;
+
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
 }

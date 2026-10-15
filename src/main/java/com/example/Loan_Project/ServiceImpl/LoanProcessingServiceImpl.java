@@ -1,6 +1,7 @@
 
 package com.example.Loan_Project.ServiceImpl;
 
+import com.example.Loan_Project.Entity.LoanAccount;
 import com.example.Loan_Project.Entity.LoanApplication;
 import com.example.Loan_Project.Entity.LoanProcessing;
 import com.example.Loan_Project.Entity.Scorecard;
@@ -9,6 +10,7 @@ import com.example.Loan_Project.Enum.LoanAccountStatus;
 import com.example.Loan_Project.Enum.LoanApplicationStatus;
 import com.example.Loan_Project.Enum.SanctionStatus;
 import com.example.Loan_Project.Enum.ScorecardStatus;
+import com.example.Loan_Project.Repository.LoanAccountRepository;
 import com.example.Loan_Project.Repository.LoanApplicationRepository;
 import com.example.Loan_Project.Repository.LoanProcessingRepository;
 import com.example.Loan_Project.Repository.ScorecardRepository;
@@ -20,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -30,17 +31,20 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
 
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanProcessingRepository loanProcessingRepository;
+    private final LoanAccountRepository loanAccountRepository;
     private final ScorecardRepository scorecardRepository;
     private final CustomerNotificationService notificationService;
 
     public LoanProcessingServiceImpl(
             LoanApplicationRepository loanApplicationRepository,
             LoanProcessingRepository loanProcessingRepository,
+            LoanAccountRepository loanAccountRepository,
             ScorecardRepository scorecardRepository,
             CustomerNotificationService notificationService) {
 
         this.loanApplicationRepository = loanApplicationRepository;
         this.loanProcessingRepository = loanProcessingRepository;
+        this.loanAccountRepository = loanAccountRepository;
         this.scorecardRepository = scorecardRepository;
         this.notificationService = notificationService;
     }
@@ -72,28 +76,30 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
         BigDecimal maximumLoanAmount =
                 application.getLoanDeal().getMaxLoanAmount();
 
-        if (requestedAmount == null || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Requested loan amount must be greater than zero");
+        if (requestedAmount == null
+                || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException(
+                    "Requested loan amount must be greater than zero");
         }
 
         if (maximumLoanAmount == null
                 || requestedAmount.compareTo(maximumLoanAmount) > 0) {
             throw new RuntimeException(
-                    "Requested amount exceeds the maximum amount of the loan deal"
-            );
+                    "Requested amount exceeds the maximum amount of the loan deal");
         }
 
         Integer tenureMonths = application.getTenureMonths();
 
         if (tenureMonths == null || tenureMonths <= 0) {
-            throw new RuntimeException("Loan tenure must be greater than zero");
+            throw new RuntimeException(
+                    "Loan tenure must be greater than zero");
         }
 
         if (application.getLoanDeal().getMaxTenureMonths() == null
-                || tenureMonths > application.getLoanDeal().getMaxTenureMonths()) {
+                || tenureMonths
+                > application.getLoanDeal().getMaxTenureMonths()) {
             throw new RuntimeException(
-                    "Requested tenure exceeds the maximum tenure of the loan deal"
-            );
+                    "Requested tenure exceeds the maximum tenure of the loan deal");
         }
 
         LoanProcessing processing = loanProcessingRepository
@@ -108,10 +114,10 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
             throw new RuntimeException("Loan is already sanctioned");
         }
 
-        BigDecimal interestRate =
-                application.getLoanDeal().getInterestRate();
+        BigDecimal interestRate = application.getLoanDeal().getInterestRate();
 
-        if (interestRate == null || interestRate.compareTo(BigDecimal.ZERO) < 0) {
+        if (interestRate == null
+                || interestRate.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("Loan interest rate is invalid");
         }
 
@@ -120,6 +126,8 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
                 interestRate,
                 tenureMonths
         );
+
+        LocalDateTime now = LocalDateTime.now();
 
         processing.setLoanApplication(application);
         processing.setSanctionedAmount(requestedAmount);
@@ -135,8 +143,8 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
         );
 
         processing.setSanctionStatus(SanctionStatus.SANCTIONED);
-        processing.setSanctionedAt(LocalDateTime.now());
-        processing.setProcessedAt(LocalDateTime.now());
+        processing.setSanctionedAt(now);
+        processing.setProcessedAt(now);
 
         LoanProcessing saved = loanProcessingRepository.save(processing);
 
@@ -151,17 +159,23 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
     public LoanProcessing disburseLoan(Long loanApplicationId) {
 
         LoanApplication application = getApplication(loanApplicationId);
-
         LoanProcessing processing = getProcessing(loanApplicationId);
 
         if (processing.getSanctionStatus() != SanctionStatus.SANCTIONED) {
             throw new RuntimeException(
-                    "Loan must be sanctioned before disbursement"
-            );
+                    "Loan must be sanctioned before disbursement");
         }
 
         if (processing.getDisbursementStatus() == DisbursementStatus.DISBURSED) {
             throw new RuntimeException("Loan is already disbursed");
+        }
+
+        // Prevent a duplicate LoanAccount for this application.
+        if (loanAccountRepository
+                .findByLoanApplication_LoanApplicationId(loanApplicationId)
+                .isPresent()) {
+            throw new RuntimeException(
+                    "Loan account already exists for this application");
         }
 
         String sanctionLetterPath = processing.getSanctionLetterPath();
@@ -169,14 +183,12 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
         if (sanctionLetterPath == null || sanctionLetterPath.isBlank()
                 || !Files.isRegularFile(Paths.get(sanctionLetterPath))) {
             throw new RuntimeException(
-                    "Generate the sanction letter PDF before disbursement"
-            );
+                    "Generate the sanction letter PDF before disbursement");
         }
 
         if (!Boolean.TRUE.equals(processing.getSanctionEmailSent())) {
             throw new RuntimeException(
-                    "Send the sanction letter email before disbursement"
-            );
+                    "Send the sanction letter email before disbursement");
         }
 
         BigDecimal sanctionedAmount = processing.getSanctionedAmount();
@@ -186,29 +198,50 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
             throw new RuntimeException("Sanctioned amount is invalid");
         }
 
-        processing.setDisbursedAmount(sanctionedAmount);
+        LocalDateTime now = LocalDateTime.now();
 
+        String loanAccountNumber =
+                "LN-" + UUID.randomUUID()
+                        .toString()
+                        .substring(0, 10)
+                        .toUpperCase();
+
+        // Update the processing record.
+        processing.setDisbursedAmount(sanctionedAmount);
         processing.setDisbursementReference(
                 "DIS-" + UUID.randomUUID()
                         .toString()
                         .substring(0, 8)
                         .toUpperCase()
         );
-
         processing.setDisbursementStatus(DisbursementStatus.DISBURSED);
-        processing.setDisbursedAt(LocalDateTime.now());
-
-        processing.setLoanAccountNumber(
-                "LN-" + UUID.randomUUID()
-                        .toString()
-                        .substring(0, 10)
-                        .toUpperCase()
-        );
-
+        processing.setDisbursedAt(now);
+        processing.setLoanAccountNumber(loanAccountNumber);
         processing.setOutstandingAmount(sanctionedAmount);
         processing.setLoanAccountStatus(LoanAccountStatus.ACTIVE);
-        processing.setLoanAccountCreatedAt(LocalDateTime.now());
-        processing.setProcessedAt(LocalDateTime.now());
+        processing.setLoanAccountCreatedAt(now);
+        processing.setProcessedAt(now);
+
+        // Create the separate LoanAccount record.
+        LoanAccount loanAccount = new LoanAccount();
+
+        loanAccount.setLoanAccountNo(loanAccountNumber);
+        loanAccount.setCustomer(application.getCustomer());
+        loanAccount.setLoanDeal(application.getLoanDeal());
+        loanAccount.setLoanApplication(application);
+
+        loanAccount.setFundedAmount(sanctionedAmount);
+        loanAccount.setOutstandingPrincipal(sanctionedAmount);
+        loanAccount.setInterestRate(processing.getInterestRate());
+        loanAccount.setTenureMonths(processing.getTenureMonths());
+        loanAccount.setEmiAmount(processing.getMonthlyEmi());
+
+        loanAccount.setDisbursementDate(now);
+        loanAccount.setActivatedAt(now);
+        loanAccount.setTotalPaidAmount(BigDecimal.ZERO);
+        loanAccount.setLoanStatus(LoanAccountStatus.ACTIVE);
+
+        loanAccountRepository.save(loanAccount);
 
         application.setStatus(LoanApplicationStatus.DISBURSED);
         loanApplicationRepository.save(application);
@@ -232,20 +265,17 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
     }
 
     private LoanApplication getApplication(Long loanApplicationId) {
-
         return loanApplicationRepository.findById(loanApplicationId)
                 .orElseThrow(() ->
                         new RuntimeException("Loan application not found"));
     }
 
     private LoanProcessing getProcessing(Long loanApplicationId) {
-
         return loanProcessingRepository
                 .findByLoanApplicationLoanApplicationId(loanApplicationId)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Loan processing record not found"
-                        ));
+                                "Loan processing record not found"));
     }
 
     private BigDecimal calculateEmi(
@@ -255,8 +285,7 @@ public class LoanProcessingServiceImpl implements LoanProcessingService {
 
         if (tenureMonths <= 0) {
             throw new IllegalArgumentException(
-                    "Tenure must be greater than zero"
-            );
+                    "Tenure must be greater than zero");
         }
 
         BigDecimal monthlyRate = annualInterestRate.divide(

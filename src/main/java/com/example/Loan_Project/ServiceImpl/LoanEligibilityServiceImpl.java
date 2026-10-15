@@ -1,3 +1,4 @@
+
 package com.example.Loan_Project.ServiceImpl;
 
 import com.example.Loan_Project.Entity.CibilEligibilityRule;
@@ -19,8 +20,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class LoanEligibilityServiceImpl
-        implements LoanEligibilityService {
+public class LoanEligibilityServiceImpl implements LoanEligibilityService {
 
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanEligibilityRepository loanEligibilityRepository;
@@ -30,65 +30,80 @@ public class LoanEligibilityServiceImpl
     @Transactional
     public LoanEligibility checkEligibility(Long loanApplicationId) {
 
-        // Step 1: Find the loan application
+        // 1. Find the loan application
         LoanApplication application = loanApplicationRepository
                 .findById(loanApplicationId)
                 .orElseThrow(() ->
                         new RuntimeException("Loan application not found"));
 
-        // Step 2: Prevent duplicate eligibility records
+        // 2. Only an approved application can proceed to eligibility
+        if (application.getStatus() != LoanApplicationStatus.APPROVED) {
+            throw new RuntimeException(
+                    "Credit Officer approval is required before eligibility check");
+        }
+
+        // 3. Ensure eligibility has not already been checked
         if (loanEligibilityRepository
                 .findByLoanApplicationLoanApplicationId(loanApplicationId)
                 .isPresent()) {
-
             throw new RuntimeException(
                     "Eligibility already checked for this application");
         }
 
-        // Step 3: Validate document verification
+        // 4. Ensure documents have been verified
         DocumentVerificationStatus documentStatus =
                 application.getDocumentVerificationStatus();
 
         if (documentStatus == null
                 || documentStatus == DocumentVerificationStatus.PENDING) {
-
             throw new RuntimeException(
                     "Document verification is pending");
         }
 
         if (documentStatus == DocumentVerificationStatus.REJECTED) {
-
             throw new RuntimeException(
                     "Document verification rejected");
         }
 
-        // Step 4: Get the CIBIL score
-        Integer cibilScore = application.getCibilScore();
-
-        if (cibilScore == null) {
+        if (documentStatus != DocumentVerificationStatus.VERIFIED) {
             throw new RuntimeException(
-                    "CIBIL score is not available");
+                    "Documents must be verified before eligibility check");
         }
 
-        // Step 5: Get the requested loan amount
+        // 5. Validate the CIBIL score
+        Integer cibilScore = application.getCibilScore();
+
+        if (cibilScore == null || cibilScore < 0) {
+            throw new RuntimeException(
+                    "Valid CIBIL score is required");
+        }
+
+        // 6. Validate the requested amount
         BigDecimal requestedAmount = application.getRequestedAmount();
 
         if (requestedAmount == null
                 || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-
             throw new RuntimeException(
                     "Requested loan amount must be greater than zero");
         }
 
-        // Step 6: Find the applicable CIBIL eligibility rule
+        // 7. Find the matching active CIBIL eligibility rule
         CibilEligibilityRule rule = cibilEligibilityRuleRepository
                 .findMatchingRule(cibilScore)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "No CIBIL eligibility rule found for score: "
+                                "No active CIBIL rule found for score: "
                                         + cibilScore));
 
-        // Step 7: Get the selected loan deal
+        BigDecimal eligibleAmount = rule.getEligibleAmount();
+
+        if (eligibleAmount == null
+                || eligibleAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException(
+                    "Eligible amount is not configured correctly in CIBIL rules");
+        }
+
+        // 8. Validate the selected loan deal and product limit
         LoanDeal loanDeal = application.getLoanDeal();
 
         if (loanDeal == null) {
@@ -96,21 +111,15 @@ public class LoanEligibilityServiceImpl
                     "Loan deal is not assigned to the application");
         }
 
-        // Step 8: Determine the effective eligible amount
-        BigDecimal eligibleAmount = rule.getEligibleAmount();
-        BigDecimal dealMaxAmount = loanDeal.getMaxLoanAmount();
+        BigDecimal productMaxAmount = loanDeal.getMaxLoanAmount();
 
-        if (eligibleAmount == null || dealMaxAmount == null) {
+        if (productMaxAmount == null
+                || productMaxAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException(
-                    "Eligible amount or loan deal maximum is not configured");
+                    "Loan product maximum amount is not configured");
         }
 
-        // Eligible amount cannot exceed the deal's maximum
-        if (dealMaxAmount.compareTo(eligibleAmount) < 0) {
-            eligibleAmount = dealMaxAmount;
-        }
-
-        // Step 9: Create the eligibility record
+        // 9. Create the eligibility result
         LoanEligibility eligibility = new LoanEligibility();
 
         eligibility.setLoanApplication(application);
@@ -119,36 +128,51 @@ public class LoanEligibilityServiceImpl
         eligibility.setEligibleAmount(eligibleAmount);
         eligibility.setEvaluatedAt(LocalDateTime.now());
 
-        // Step 10: Evaluate eligibility
-        boolean isEligible = calculateEligibility(
-                cibilScore,
-                requestedAmount,
-                eligibleAmount
-        );
+        boolean rejectedRule =
+                "REJECT".equalsIgnoreCase(rule.getStatus());
 
-        eligibility.setEligible(isEligible);
+        boolean exceedsCibilLimit =
+                requestedAmount.compareTo(eligibleAmount) > 0;
 
-        // Step 11: Update remarks and application status
-        if (isEligible) {
+        boolean exceedsProductLimit =
+                requestedAmount.compareTo(productMaxAmount) > 0;
 
+        // 10. Determine eligibility and record the reason
+        if (rejectedRule) {
+
+            eligibility.setEligible(false);
             eligibility.setRemarks(
-                    "Customer is eligible for the requested loan amount");
+                    "Rejected because the CIBIL status is REJECT");
 
-            application.setStatus(
-                    LoanApplicationStatus.ELIGIBLE);
+        } else if (exceedsCibilLimit) {
+
+            eligibility.setEligible(false);
+            eligibility.setRemarks(
+                    "Requested amount exceeds the CIBIL-based eligible amount");
+
+        } else if (exceedsProductLimit) {
+
+            eligibility.setEligible(false);
+            eligibility.setRemarks(
+                    "Requested amount exceeds the selected loan product maximum");
 
         } else {
 
+            eligibility.setEligible(true);
             eligibility.setRemarks(
-                    "Customer is not eligible for the requested loan amount");
-
-            application.setStatus(
-                    LoanApplicationStatus.NOT_ELIGIBLE);
+                    "Customer satisfies the CIBIL and loan product amount limits");
         }
 
-        // Step 12: Save the updated application and eligibility result
+        // 11. Update the application status
+        if (Boolean.TRUE.equals(eligibility.getEligible())) {
+            application.setStatus(LoanApplicationStatus.ELIGIBLE);
+        } else {
+            application.setStatus(LoanApplicationStatus.NOT_ELIGIBLE);
+        }
+
         loanApplicationRepository.save(application);
 
+        // 12. Save and return the eligibility result
         return loanEligibilityRepository.save(eligibility);
     }
 
@@ -161,20 +185,5 @@ public class LoanEligibilityServiceImpl
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Eligibility not found for this application"));
-    }
-
-    // Checks the CIBIL minimum and requested amount
-    private boolean calculateEligibility(
-            Integer cibilScore,
-            BigDecimal requestedAmount,
-            BigDecimal eligibleAmount) {
-
-        // Scores below 650 are not eligible
-        if (cibilScore < 650) {
-            return false;
-        }
-
-        // Requested amount must not exceed the effective eligible amount
-        return requestedAmount.compareTo(eligibleAmount) <= 0;
     }
 }

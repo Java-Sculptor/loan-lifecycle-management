@@ -1,12 +1,13 @@
 package com.example.Loan_Project.Controller;
 
+import com.example.Loan_Project.DTO.ApiResponse;
 import com.example.Loan_Project.Entity.Scorecard;
 import com.example.Loan_Project.Service.ScorecardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/scorecards")
+@RequestMapping("/api/v1/scorecards")
 public class ScorecardController {
 
     private final ScorecardService scorecardService;
@@ -16,20 +17,18 @@ public class ScorecardController {
     }
 
     @PostMapping("/{loanApplicationId}")
-    public ResponseEntity<Scorecard> generateScorecard(
+    public ResponseEntity<ApiResponse<Scorecard>> generateScorecard(
             @PathVariable Long loanApplicationId) {
-
-        return ResponseEntity.ok(
-                scorecardService.generateScorecard(loanApplicationId)
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                "Scorecard generated successfully",
+                scorecardService.generateScorecard(loanApplicationId)));
     }
 
     @GetMapping("/{loanApplicationId}")
-    public ResponseEntity<Scorecard> getScorecard(
+    public ResponseEntity<ApiResponse<Scorecard>> getScorecard(
             @PathVariable Long loanApplicationId) {
-
-        return ResponseEntity.ok(
-                scorecardService.getScorecard(loanApplicationId)
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                "Scorecard fetched successfully",
+                scorecardService.getScorecard(loanApplicationId)));
     }
 }

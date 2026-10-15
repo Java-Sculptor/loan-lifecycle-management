@@ -17,27 +17,54 @@ public class LoanApplicationResponse {
     private Long loanApplicationId;
     private Long customerId;
     private String customerName;
+
     private Long loanDealId;
     private LoanType loanType;
     private BigDecimal interestRate;
+
     private BigDecimal requestedAmount;
     private Integer tenureMonths;
+    private Integer cibilScore;
+
+    private String bankName;
+    private String bankAccountNumber;
+    private String ifscCode;
+    private Integer emiDay;
+
     private LoanApplicationStatus status;
     private DocumentVerificationStatus documentVerificationStatus;
     private LocalDateTime appliedAt;
+    private String rejectionReason;
 
-    public static LoanApplicationResponse from(LoanApplication application) {
+    public static LoanApplicationResponse from(
+            LoanApplication application) {
 
-        LoanApplicationResponse response = new LoanApplicationResponse();
+        LoanApplicationResponse response =
+                new LoanApplicationResponse();
 
-        response.setLoanApplicationId(application.getLoanApplicationId());
-        response.setRequestedAmount(application.getRequestedAmount());
-        response.setTenureMonths(application.getTenureMonths());
+        response.setLoanApplicationId(
+                application.getLoanApplicationId());
+        response.setRequestedAmount(
+                application.getRequestedAmount());
+        response.setTenureMonths(
+                application.getTenureMonths());
+        response.setCibilScore(
+                application.getCibilScore());
+
+        response.setBankName(application.getBankName());
+        response.setBankAccountNumber(
+                application.getBankAccountNumber());
+        response.setIfscCode(application.getIfscCode());
+        response.setEmiDay(application.getEmiDay());
+
         response.setStatus(application.getStatus());
         response.setDocumentVerificationStatus(
-                application.getDocumentVerificationStatus()
-        );
+                application.getDocumentVerificationStatus());
         response.setAppliedAt(application.getAppliedAt());
+
+        // Include the rejection reason in the API response
+        response.setRejectionReason(
+                application.getRejectionReason());
 
         Customer customer = application.getCustomer();
 
@@ -53,16 +80,17 @@ public class LoanApplicationResponse {
                     : customer.getLastName().trim();
 
             response.setCustomerName(
-                    (firstName + " " + lastName).trim()
-            );
+                    (firstName + " " + lastName).trim());
         }
 
         LoanDeal loanDeal = application.getLoanDeal();
 
         if (loanDeal != null) {
-            response.setLoanDealId(loanDeal.getLoanDealId());
+            response.setLoanDealId(
+                    loanDeal.getLoanDealId());
             response.setLoanType(loanDeal.getLoanType());
-            response.setInterestRate(loanDeal.getInterestRate());
+            response.setInterestRate(
+                    loanDeal.getInterestRate());
         }
 
         return response;

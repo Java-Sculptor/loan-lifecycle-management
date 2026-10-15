@@ -1,4 +1,5 @@
-package com.example.Loan_Project.DTO.Response;
+
+package com.example.Loan_Project.DTO;
 
 import com.example.Loan_Project.Enum.DocumentVerificationStatus;
 import com.example.Loan_Project.Enum.LoanApplicationStatus;
@@ -11,9 +12,11 @@ import java.time.LocalDateTime;
 public class LoanEligibilityResponse {
 
     private Long eligibilityId;
+
     private Integer cibilScore;
     private String cibilStatus;
     private BigDecimal eligibleAmount;
+
     private Boolean eligible;
     private String remarks;
     private LocalDateTime evaluatedAt;
@@ -21,6 +24,7 @@ public class LoanEligibilityResponse {
     private Long loanApplicationId;
     private BigDecimal requestedAmount;
     private Integer tenureMonths;
+
     private LoanApplicationStatus applicationStatus;
     private DocumentVerificationStatus documentVerificationStatus;
 

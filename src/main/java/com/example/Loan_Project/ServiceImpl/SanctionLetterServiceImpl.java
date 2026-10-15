@@ -156,7 +156,7 @@ public class SanctionLetterServiceImpl implements SanctionLetterService {
         return new SanctionLetterResponse(
                 loanApplicationId,
                 processing.getSanctionLetterNumber(),
-                "/loan-processing/sanction-letter/"
+                "/api/v1/loan-processing/sanction-letter/"
                         + loanApplicationId + "/download",
                 notificationCreated,
                 emailSent,

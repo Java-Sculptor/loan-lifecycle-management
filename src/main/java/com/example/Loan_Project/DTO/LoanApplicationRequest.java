@@ -15,5 +15,11 @@ public class LoanApplicationRequest {
 
     private Integer tenureMonths;
 
-    private Integer cibilScore;
+    private String bankName;
+
+    private String bankAccountNumber;
+
+    private String ifscCode;
+
+    private Integer emiDay;
 }
