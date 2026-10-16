@@ -1,0 +1,160 @@
+<div class="loan-layout">
+    <app-loan-sidebar></app-loan-sidebar>
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">LOAN MANAGEMENT</span>
+                <h1>Sanction Letter</h1>
+                <p>
+                    View your loan processing status and download your generated
+                    sanction letter.
+                </p>
+            </div>
+        </header>
+
+        <section class="sanction-form">
+            <div class="card-heading">
+                <div class="heading-icon">
+                    <i class="bi bi-file-earmark-check"></i>
+                </div>
+
+                <div>
+                    <h2>Loan Status and Documents</h2>
+                    <p>Enter your loan application ID to view its current status.</p>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="applicationId">Loan Application ID</label>
+
+                <input id="applicationId" type="number" min="1" step="1" placeholder="e.g. 11"
+                    [value]="applicationIdInput" (input)="onApplicationIdChange($any($event.target).value)" />
+
+                <small>Find your application ID on the My Applications page.</small>
+            </div>
+
+            <button type="button" class="primary-button" (click)="loadLoanStatus()"
+                [disabled]="isLoading || isDownloading">
+                <i class="bi bi-search"></i>
+                {{ isLoading ? 'Loading Status...' : 'View Loan Status' }}
+            </button>
+
+            @if (isLoading) {
+            <div class="message-box loading-message" role="status">
+                <i class="bi bi-arrow-repeat"></i>
+                Loading your loan details...
+            </div>
+            }
+
+            @if (errorMessage) {
+            <div class="message-box error-message" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                {{ errorMessage }}
+            </div>
+            }
+
+            @if (successMessage) {
+            <div class="message-box success-message" role="status">
+                <i class="bi bi-check-circle"></i>
+                {{ successMessage }}
+            </div>
+            }
+        </section>
+
+        @if (processingDetails; as processing) {
+        <section class="sanction-result">
+            <div class="result-header">
+                <div class="result-icon">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </div>
+
+                <div class="result-title">
+                    <span class="page-eyebrow">LOAN PROCESSING</span>
+                    <h2>Application #{{ applicationIdInput }}</h2>
+                    <p>Your current loan processing details</p>
+                </div>
+            </div>
+
+            <div class="detail-list">
+                <div class="detail-row">
+                    <span>Loan Account Number</span>
+                    <strong>
+                        {{ processing.loanAccountNumber || 'Not created yet' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Loan Account Status</span>
+                    <strong>
+                        {{ processing.loanAccountStatus || 'Not activated' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Status</span>
+                    <span class="status-badge" [class.status-success]="processing.disbursementStatus === 'DISBURSED'"
+                        [class.status-pending]="processing.disbursementStatus !== 'DISBURSED'">
+                        {{ processing.disbursementStatus || 'Awaiting Disbursement' }}
+                    </span>
+                </div>
+
+                @if (processing.disbursementStatus === 'DISBURSED') {
+                <div class="detail-row">
+                    <span>Disbursement Reference</span>
+                    <strong>{{ processing.disbursementReference || '—' }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursed Amount</span>
+                    <strong>
+                        {{ processing.disbursedAmount | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Monthly EMI</span>
+                    <strong>
+                        {{ processing.monthlyEmi | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Outstanding Amount</span>
+                    <strong>
+                        {{ processing.outstandingAmount | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Date</span>
+                    <strong>
+                        {{
+                        processing.disbursedAt
+                        ? (processing.disbursedAt | date:'dd MMM yyyy, h:mm a')
+                        : '—'
+                        }}
+                    </strong>
+                </div>
+                }
+            </div>
+
+            <div class="disbursement-section">
+                <div class="section-heading">
+                    <span class="page-eyebrow">YOUR DOCUMENT</span>
+                    <h2>Sanction Letter PDF</h2>
+                    <p>
+                        Download the sanction letter generated for your application.
+                    </p>
+                </div>
+
+                <button type="button" class="download-button" (click)="downloadSanctionLetter()"
+                    [disabled]="isDownloading || isLoading">
+                    <i class="bi bi-download"></i>
+                    {{ isDownloading ? 'Downloading PDF...' : 'Download Sanction Letter PDF' }}
+                </button>
+            </div>
+        </section>
+        }
+    </main>
+</div>

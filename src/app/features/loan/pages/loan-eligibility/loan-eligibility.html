@@ -1,0 +1,153 @@
+<div class="loan-layout">
+    @if (isOfficerView) {
+    <app-credit-officer-loan-sidebar></app-credit-officer-loan-sidebar>
+    } @else {
+    <app-loan-sidebar></app-loan-sidebar>
+    }
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">LOAN MANAGEMENT</span>
+                <h1>Loan Eligibility</h1>
+                <p>Check eligibility and review the result for your loan application.</p>
+            </div>
+        </header>
+
+        <section class="eligibility-card">
+            <div class="card-heading">
+                <div class="heading-icon">
+                    <i class="bi bi-clipboard-check"></i>
+                </div>
+                <div>
+                    <h2>Check Your Eligibility</h2>
+                    <p>Enter your existing loan application ID to continue.</p>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="applicationId">Loan Application ID</label>
+                <input id="applicationId" type="number" min="1" step="1" placeholder="e.g. 5"
+                    [value]="applicationIdInput" (input)="onApplicationIdChange($any($event.target).value)" />
+                <small>Use the ID shown in My Applications.</small>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="primary-button" (click)="checkEligibility()" [disabled]="isLoading">
+                    <i class="bi bi-search"></i>
+                    {{ isLoading ? 'Checking...' : 'Check Eligibility' }}
+                </button>
+
+                <button type="button" class="secondary-button" (click)="loadExistingEligibility()"
+                    [disabled]="isLoading">
+                    View Existing Result
+                </button>
+            </div>
+
+            @if (isLoading) {
+            <div class="message-box loading-message" role="status">
+                <i class="bi bi-arrow-repeat"></i>
+                Evaluating your application...
+            </div>
+            }
+
+            @if (errorMessage) {
+            <div class="message-box error-message" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                {{ errorMessage }}
+            </div>
+            }
+
+            @if (successMessage) {
+            <div class="message-box success-message" role="status">
+                <i class="bi bi-check-circle"></i>
+                {{ successMessage }}
+            </div>
+            }
+        </section>
+
+        @if (result; as eligibility) {
+        <section class="result-section">
+            <div class="result-header">
+                <div>
+                    <span class="page-eyebrow">ELIGIBILITY REPORT</span>
+                    <h2>Application #{{ eligibility.loanApplicationId }}</h2>
+                    <p>
+                        {{ eligibility.loanType === 'HOME_LOAN' ? 'Home Loan' : 'Vehicle Loan' }}
+                        · {{ eligibility.customerName }}
+                    </p>
+                </div>
+
+                <span class="decision-badge" [class.eligible-badge]="eligibility.eligible"
+                    [class.not-eligible-badge]="!eligibility.eligible">
+                    {{ eligibility.eligible ? 'Eligible' : 'Not Eligible' }}
+                </span>
+            </div>
+
+            <div class="result-grid">
+                <article class="result-card">
+                    <span>CIBIL Score</span>
+                    <h3>{{ eligibility.cibilScore }}</h3>
+                    <small>{{ eligibility.cibilStatus }}</small>
+                </article>
+
+                <article class="result-card">
+                    <span>Eligible Amount</span>
+                    <h3>
+                        {{ eligibility.eligibleAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+                    </h3>
+                    <small>Maximum amount under the applicable CIBIL rule</small>
+                </article>
+
+                <article class="result-card">
+                    <span>Requested Amount</span>
+                    <h3>
+                        {{ eligibility.requestedAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+                    </h3>
+                    <small>{{ eligibility.tenureMonths }} months requested</small>
+                </article>
+
+                <article class="result-card">
+                    <span>Interest Rate</span>
+                    <h3>{{ eligibility.interestRate }}% p.a.</h3>
+                    <small>For the selected loan product</small>
+                </article>
+            </div>
+
+            <div class="detail-card">
+                <h3>Application Details</h3>
+
+                <div class="detail-row">
+                    <span>Customer</span>
+                    <strong>{{ eligibility.customerName }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Customer Email</span>
+                    <strong>{{ eligibility.customerEmail }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Application Status</span>
+                    <strong>{{ eligibility.applicationStatus }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Document Verification</span>
+                    <strong>{{ eligibility.documentVerificationStatus }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Evaluated At</span>
+                    <strong>{{ eligibility.evaluatedAt | date:'dd MMM yyyy, h:mm a' }}</strong>
+                </div>
+
+                <div class="remarks">
+                    <span>Eligibility Remarks</span>
+                    <p>{{ eligibility.remarks }}</p>
+                </div>
+            </div>
+        </section>
+        }
+    </main>
+</div>

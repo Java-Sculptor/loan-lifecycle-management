@@ -1,1 +1,63 @@
-<p>loan-list works!</p>
+<div class="loan-layout">
+    <app-loan-sidebar></app-loan-sidebar>
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <h1>Loan Services</h1>
+                <p>Explore available loans and start your application.</p>
+            </div>
+        </header>
+
+        @if (isLoading) {
+        <p>Loading available loan deals...</p>
+        } @else if (errorMessage) {
+        <p role="alert">{{ errorMessage }}</p>
+        } @else if (loanDeals.length === 0) {
+        <p>No active loan deals are available right now.</p>
+        } @else {
+        <section class="loan-grid">
+            @for (deal of loanDeals; track deal.loanDealId) {
+            <article class="loan-card">
+                <div class="loan-icon">
+                    {{ deal.loanType === 'HOME_LOAN' ? '🏠' : '🚗' }}
+                </div>
+
+                <h2>
+                    {{ deal.loanType === 'HOME_LOAN' ? 'Home Loan' : 'Vehicle Loan' }}
+                </h2>
+
+                <p>
+                    {{
+                    deal.loanType === 'HOME_LOAN'
+                    ? 'Finance your dream home.'
+                    : 'Explore financing for your vehicle.'
+                    }}
+                </p>
+
+                <div class="loan-detail">
+                    <span>Interest rate</span>
+                    <strong>{{ deal.interestRate }}% p.a.</strong>
+                </div>
+
+                <div class="loan-detail">
+                    <span>Maximum tenure</span>
+                    <strong>{{ deal.maxTenureMonths }} months</strong>
+                </div>
+
+                <div class="loan-detail">
+                    <span>Maximum amount</span>
+                    <strong>
+                        {{ deal.maxLoanAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+                    </strong>
+                </div>
+
+                <a [routerLink]="['/loan/apply']" [queryParams]="{ dealId: deal.loanDealId }">
+                    Apply for Loan
+                </a>
+            </article>
+            }
+        </section>
+        }
+    </main>
+</div>

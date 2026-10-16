@@ -1,0 +1,238 @@
+<div class="loan-layout">
+    <app-credit-officer-loan-sidebar></app-credit-officer-loan-sidebar>
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">CREDIT OPERATIONS</span>
+                <h1>Loan Processing</h1>
+                <p>
+                    Generate sanction letters, download documents, and process
+                    approved loan disbursements.
+                </p>
+            </div>
+        </header>
+
+        <section class="sanction-form">
+            <div class="card-heading">
+                <div class="heading-icon">
+                    <i class="bi bi-file-earmark-check"></i>
+                </div>
+                <div>
+                    <h2>Sanction Letter Processing</h2>
+                    <p>Enter the ID of an approved loan application.</p>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="applicationId">Loan Application ID</label>
+                <input id="applicationId" type="number" min="1" step="1" placeholder="e.g. 11"
+                    [value]="applicationIdInput" (input)="onApplicationIdChange($any($event.target).value)" />
+                <small>Use the application ID from the loan applications queue.</small>
+            </div>
+
+            <button type="button" class="primary-button" (click)="generateSanctionLetter()"
+                [disabled]="isGenerating || isDownloading || isDisbursing">
+                <i class="bi bi-file-earmark-plus"></i>
+                {{ isGenerating ? 'Processing...' : 'Generate Sanction Letter' }}
+            </button>
+
+            @if (isGenerating) {
+            <div class="message-box loading-message" role="status">
+                <i class="bi bi-arrow-repeat"></i>
+                Processing the sanction letter...
+            </div>
+            }
+
+            @if (errorMessage) {
+            <div class="message-box error-message" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                {{ errorMessage }}
+            </div>
+            }
+
+            @if (successMessage) {
+            <div class="message-box success-message" role="status">
+                <i class="bi bi-check-circle"></i>
+                {{ successMessage }}
+            </div>
+            }
+        </section>
+
+        @if (result; as letter) {
+        <section class="sanction-result">
+            <div class="result-header">
+                <div class="result-icon">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </div>
+
+                <div class="result-title">
+                    <span class="page-eyebrow">SANCTION DOCUMENT</span>
+                    <h2>Sanction Letter</h2>
+                    <p>Application #{{ letter.loanApplicationId }}</p>
+                </div>
+
+                <span class="status-badge status-success">Generated</span>
+            </div>
+
+            <div class="detail-list">
+                <div class="detail-row">
+                    <span>Sanction Letter Number</span>
+                    <strong>{{ letter.sanctionLetterNumber }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Application ID</span>
+                    <strong>#{{ letter.loanApplicationId }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Email Notification</span>
+                    <span class="status-badge" [class.status-success]="letter.emailSent"
+                        [class.status-pending]="!letter.emailSent">
+                        {{ letter.emailSent ? 'Sent' : 'Not Sent' }}
+                    </span>
+                </div>
+
+                <div class="detail-row">
+                    <span>Notification Record</span>
+                    <span class="status-badge" [class.status-success]="letter.notificationCreated"
+                        [class.status-pending]="!letter.notificationCreated">
+                        {{ letter.notificationCreated ? 'Created' : 'Not Created' }}
+                    </span>
+                </div>
+            </div>
+
+            <p class="letter-message">{{ letter.message }}</p>
+
+            <button type="button" class="download-button" (click)="downloadSanctionLetter()"
+                [disabled]="isDownloading || isGenerating || isDisbursing">
+                <i class="bi bi-download"></i>
+                {{ isDownloading ? 'Downloading PDF...' : 'Download Sanction Letter PDF' }}
+            </button>
+
+            <div class="disbursement-section">
+                <div class="section-heading">
+                    <span class="page-eyebrow">NEXT STEP</span>
+                    <h2>Loan Disbursement</h2>
+                    <p>
+                        Confirm the required formalities before disbursing the
+                        approved loan.
+                    </p>
+                </div>
+
+                @if (isLoadingProcessing) {
+                <div class="message-box loading-message" role="status">
+                    <i class="bi bi-arrow-repeat"></i>
+                    Checking loan processing status...
+                </div>
+                } @else if (isAlreadyDisbursed) {
+                <div class="message-box success-message" role="status">
+                    <i class="bi bi-check-circle"></i>
+                    This loan has already been disbursed successfully.
+                </div>
+                } @else {
+                @if (!letter.emailSent) {
+                <div class="message-box loading-message" role="status">
+                    <i class="bi bi-info-circle"></i>
+                    Disbursement is unavailable until the sanction email
+                    has been sent successfully.
+                </div>
+                }
+
+                <button type="button" class="primary-button disburse-button" (click)="disburseLoan()" [disabled]="
+                isDisbursing ||
+                isGenerating ||
+                isDownloading ||
+                isLoadingProcessing ||
+                !letter.emailSent
+              ">
+                    <i class="bi bi-bank"></i>
+                    {{ isDisbursing ? 'Processing Disbursement...' : 'Disburse Loan' }}
+                </button>
+                }
+
+                @if (disbursementError) {
+                <div class="message-box error-message" role="alert">
+                    <i class="bi bi-exclamation-circle"></i>
+                    {{ disbursementError }}
+                </div>
+                }
+
+                @if (disbursementSuccess) {
+                <div class="message-box success-message" role="status">
+                    <i class="bi bi-check-circle"></i>
+                    {{ disbursementSuccess }}
+                </div>
+                }
+            </div>
+        </section>
+        }
+
+        @if (processingDetails; as processing) {
+        @if (processing.disbursementStatus === 'DISBURSED') {
+        <section class="loan-account-result">
+            <div class="result-header">
+                <div class="result-icon">
+                    <i class="bi bi-bank"></i>
+                </div>
+
+                <div class="result-title">
+                    <span class="page-eyebrow">LOAN ACCOUNT</span>
+                    <h2>Loan Account Activated</h2>
+                    <p>Disbursement has been recorded successfully.</p>
+                </div>
+
+                <span class="status-badge status-success">
+                    {{ processing.loanAccountStatus || 'ACTIVE' }}
+                </span>
+            </div>
+
+            <div class="detail-list">
+                <div class="detail-row">
+                    <span>Loan Account Number</span>
+                    <strong>{{ processing.loanAccountNumber || 'Not available' }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Reference</span>
+                    <strong>{{ processing.disbursementReference || '—' }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursed Amount</span>
+                    <strong>
+                        {{ processing.disbursedAmount | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Monthly EMI</span>
+                    <strong>
+                        {{ processing.monthlyEmi | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Outstanding Amount</span>
+                    <strong>
+                        {{ processing.outstandingAmount | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Date</span>
+                    <strong>
+                        {{
+                        processing.disbursedAt
+                        ? (processing.disbursedAt | date:'dd MMM yyyy, h:mm a')
+                        : '—'
+                        }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+        }
+        }
+    </main>
+</div>

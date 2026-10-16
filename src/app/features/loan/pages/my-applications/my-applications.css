@@ -1,0 +1,399 @@
+
+:host {
+    display: block;
+}
+
+.loan-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f3f6fb;
+}
+
+.loan-content {
+    flex: 1;
+    min-width: 0;
+    padding: 32px;
+    background: #f3f6fb;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 26px;
+}
+
+.page-eyebrow {
+    color: #1264c5;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.page-header h1 {
+    margin: 7px 0;
+    color: #172b4d;
+    font-size: 28px;
+}
+
+.page-header p,
+.section-heading p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.refresh-button,
+.primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid #1264c5;
+    border-radius: 7px;
+    background: #1264c5;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.refresh-button:hover,
+.primary-button:hover {
+    background: #0b51a3;
+}
+
+.refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 280px;
+    margin-bottom: 28px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.summary-icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    place-items: center;
+    border-radius: 10px;
+    background: #eaf2ff;
+    color: #1264c5;
+    font-size: 23px;
+}
+
+.summary-card span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.summary-card h2 {
+    margin: 5px 0 0;
+    color: #172b4d;
+    font-size: 26px;
+}
+
+.applications-section {
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.section-heading h2 {
+    margin: 0 0 7px;
+    color: #172b4d;
+    font-size: 19px;
+}
+
+.record-count {
+    padding: 7px 11px;
+    border-radius: 20px;
+    background: #edf4ff;
+    color: #1857a4;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #edf0f5;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #334155;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+thead {
+    background: #f8fafc;
+}
+
+th {
+    padding: 13px 14px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+td {
+    padding: 16px 14px;
+    border-bottom: 1px solid #edf0f5;
+    vertical-align: top;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+tbody tr:hover {
+    background: #f8fbff;
+}
+
+.application-id {
+    color: #1264c5;
+    font-weight: 700;
+}
+
+.loan-type {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.loan-type i {
+    color: #1264c5;
+    font-size: 16px;
+}
+
+.amount {
+    color: #172b4d;
+    font-weight: 600;
+}
+
+/* Application and document status badges */
+.status-badge {
+    display: inline-block;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.status-success,
+.status-disbursed,
+.status-verified {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-sanctioned {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-pending,
+.status-applied {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-danger,
+.status-rejected {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-neutral {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Application progress */
+.application-progress {
+    width: 120px;
+    max-width: 100%;
+    margin-top: 9px;
+}
+
+.progress-track {
+    width: 100%;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e2e8f0;
+}
+
+.progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: 10px;
+    background: #1264c5;
+    transition: width 0.25s ease;
+}
+
+.progress-label {
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+/* Rejection and decision details */
+.decision-reason {
+    width: 190px;
+    max-width: 240px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+.decision-reason strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #b91c1c;
+    font-size: 11px;
+}
+
+.decision-reason p {
+    margin: 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.decision-complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.decision-pending {
+    color: #64748b;
+    font-size: 12px;
+    white-space: normal;
+}
+
+/* Loading, empty, and error states */
+.state-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    padding: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    text-align: center;
+}
+
+.state-card > i {
+    color: #1264c5;
+    font-size: 32px;
+}
+
+.state-card h3 {
+    margin: 14px 0 6px;
+    color: #172b4d;
+}
+
+.state-card p {
+    max-width: 450px;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.state-card .primary-button {
+    margin-top: 8px;
+}
+
+.error-state > i {
+    color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+    .loan-content {
+        padding: 20px;
+    }
+
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .applications-section {
+        padding: 16px;
+    }
+
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .table-wrapper table {
+        min-width: 1050px;
+    }
+}
+
+@media (max-width: 480px) {
+    .loan-content {
+        padding: 16px 12px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .applications-section {
+        padding: 12px;
+    }
+
+    .summary-card {
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+    }
+
+    .refresh-button {
+        width: 100%;
+    }
+}

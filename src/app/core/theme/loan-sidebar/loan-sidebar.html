@@ -1,0 +1,68 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <i class="bi bi-person-circle"></i>
+    <span>Customer</span>
+  </div>
+
+  <nav aria-label="Customer navigation">
+    <a routerLink="/customer/profile" class="menu-link">
+      <i class="bi bi-person"></i>
+      <span>Customer</span>
+    </a>
+
+    <button type="button" class="menu-link menu-toggle" [attr.aria-expanded]="loanMenuExpanded"
+      aria-controls="loan-submenu" (click)="toggleLoanMenu()">
+      <i class="bi bi-bank"></i>
+      <span>Loan Services</span>
+      <i class="bi bi-chevron-down ms-auto arrow" [class.rotate]="loanMenuExpanded"></i>
+    </button>
+
+    @if (loanMenuExpanded) {
+    <div class="submenu" id="loan-submenu">
+      <a routerLink="/loan" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="submenu-link">
+        Available Loans
+      </a>
+
+      <a routerLink="/loan/apply" routerLinkActive="active" class="submenu-link">
+        Apply for Loan
+      </a>
+
+      <a routerLink="/loan/my-applications" routerLinkActive="active" class="submenu-link">
+        My Applications
+      </a>
+
+      <a routerLink="/loan/eligibility" routerLinkActive="active" class="submenu-link">
+        Eligibility
+      </a>
+
+      <a routerLink="/loan/scorecard" routerLinkActive="active" class="submenu-link">
+        <i class="bi bi-clipboard-data"></i>
+        <span>Scorecard</span>
+      </a>
+
+      <a routerLink="/loan/sanction-letter" routerLinkActive="active" class="submenu-link">
+        Sanction Letter
+      </a>
+
+      <a routerLink="/loan/account" routerLinkActive="active" class="submenu-link">
+        Loan Account
+      </a>
+    </div>
+    }
+
+    <a routerLink="/emi" class="menu-link">
+      <i class="bi bi-wallet2"></i>
+      <span>Payments</span>
+    </a>
+
+    <a routerLink="/support" class="menu-link">
+      <i class="bi bi-headset"></i>
+      <span>Support</span>
+    </a>
+
+    <a routerLink="/logout" class="menu-link">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Logout</span>
+    </a>
+  </nav>
+</aside>

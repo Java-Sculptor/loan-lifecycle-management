@@ -1,0 +1,194 @@
+<div class="loan-layout">
+    <app-loan-sidebar></app-loan-sidebar>
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">LOAN MANAGEMENT</span>
+                <h1>My Applications</h1>
+                <p>Track your loan applications and their progress from submission to disbursement.</p>
+            </div>
+
+            <button type="button" class="refresh-button" (click)="loadApplications()" [disabled]="isLoading">
+                <i class="bi bi-arrow-clockwise"></i>
+                {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+            </button>
+        </header>
+
+        <section class="summary-card">
+            <div class="summary-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+
+            <div>
+                <span>Total Applications</span>
+                <h2>{{ applications.length }}</h2>
+            </div>
+        </section>
+
+        @if (isLoading) {
+        <div class="state-card">
+            <i class="bi bi-arrow-repeat"></i>
+            <p>Loading your applications...</p>
+        </div>
+        } @else if (errorMessage) {
+        <div class="state-card error-state" role="alert">
+            <i class="bi bi-exclamation-circle"></i>
+            <h3>Unable to load applications</h3>
+            <p>{{ errorMessage }}</p>
+
+            <button type="button" class="primary-button" (click)="loadApplications()">
+                Try Again
+            </button>
+        </div>
+        } @else if (applications.length === 0) {
+        <div class="state-card">
+            <i class="bi bi-folder2-open"></i>
+            <h3>No Applications Yet</h3>
+            <p>You haven't submitted any loan applications yet.</p>
+            <a routerLink="/loan/apply" class="primary-button">
+                Apply for a Loan
+            </a>
+        </div>
+        } @else {
+        <section class="applications-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Application History</h2>
+                    <p>Review your application details, verification status, and progress.</p>
+                </div>
+
+                <span class="record-count">
+                    {{ applications.length }} records
+                </span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application ID</th>
+                            <th>Loan Type</th>
+                            <th>Requested Amount</th>
+                            <th>Interest Rate</th>
+                            <th>Tenure</th>
+                            <th>Applied On</th>
+                            <th>Application Status</th>
+                            <th>Document Status</th>
+                            <th>Decision Details</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (application of applications; track application.loanApplicationId) {
+                        <tr>
+                            <td class="application-id">
+                                #{{ application.loanApplicationId }}
+                            </td>
+
+                            <td>
+                                <div class="loan-type">
+                                    <i class="bi" [class.bi-house-door]="application.loanType === 'HOME_LOAN'"
+                                        [class.bi-car-front]="application.loanType === 'VEHICLE_LOAN'">
+                                    </i>
+
+                                    <span>
+                                        {{
+                                        application.loanType === 'HOME_LOAN'
+                                        ? 'Home Loan'
+                                        : 'Vehicle Loan'
+                                        }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="amount">
+                                {{
+                                application.requestedAmount
+                                | currency:'INR':'symbol':'1.0-0':'en-IN'
+                                }}
+                            </td>
+
+                            <td>{{ application.interestRate }}% p.a.</td>
+
+                            <td>{{ application.tenureMonths }} months</td>
+
+                            <td>
+                                {{ application.appliedAt | date:'dd MMM yyyy' }}
+                            </td>
+
+                            <td>
+                                <span class="status-badge" [ngClass]="getStatusClass(application.status)">
+                                    {{ getStatusLabel(application.status) }}
+                                </span>
+
+                                @if (getProgressStep(application.status) > 0) {
+                                <div class="application-progress" aria-label="Application progress">
+
+                                    <div class="progress-track">
+                                        <span class="progress-fill"
+                                            [style.width.%]="getProgressStep(application.status) * 20">
+                                        </span>
+                                    </div>
+
+                                    <div class="progress-label">
+                                        Step {{ getProgressStep(application.status) }} of 5
+                                    </div>
+                                </div>
+                                }
+                            </td>
+
+                            <td>
+                                <span class="status-badge" [ngClass]="
+                        application.documentVerificationStatus === 'VERIFIED'
+                          ? 'status-success'
+                          : application.documentVerificationStatus === 'REJECTED'
+                            ? 'status-danger'
+                            : 'status-pending'
+                      ">
+                                    {{
+                                    application.documentVerificationStatus === 'VERIFIED'
+                                    ? 'Verified'
+                                    : application.documentVerificationStatus === 'REJECTED'
+                                    ? 'Rejected'
+                                    : application.documentVerificationStatus
+                                    }}
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (application.rejectionReason) {
+                                <div class="decision-reason">
+                                    <strong>Rejection Reason</strong>
+                                    <p>{{ application.rejectionReason }}</p>
+                                </div>
+                                } @else if (application.status === 'NOT_ELIGIBLE') {
+                                <div class="decision-reason">
+                                    <strong>Eligibility Decision</strong>
+                                    <p>Eligibility criteria were not met.</p>
+                                </div>
+                                } @else if (application.status === 'REJECTED') {
+                                <div class="decision-reason">
+                                    <strong>Application Rejected</strong>
+                                    <p>No rejection reason is available.</p>
+                                </div>
+                                } @else if (application.status === 'DISBURSED') {
+                                <span class="decision-complete">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Loan disbursed
+                                </span>
+                                } @else {
+                                <span class="decision-pending">
+                                    No additional details
+                                </span>
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        }
+    </main>
+</div>

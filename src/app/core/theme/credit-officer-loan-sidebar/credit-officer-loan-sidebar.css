@@ -1,0 +1,87 @@
+:host {
+    display: block;
+    flex: 0 0 188px;
+    align-self: stretch;
+}
+
+.loan-officer-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    width: 188px;
+    min-height: 100vh;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, #0d6efd 0%, #084298 100%);
+    color: #fff;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 18px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.sidebar-brand i {
+    font-size: 20px;
+}
+
+.loan-officer-sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 0 18px;
+    border-left: 3px solid transparent;
+    color: #fff;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.menu-link i {
+    flex: 0 0 16px;
+    font-size: 16px;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.menu-link.active {
+    border-left-color: #fff;
+    background: rgba(255, 255, 255, 0.17);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    :host {
+        flex-basis: 150px;
+    }
+
+    .loan-officer-sidebar {
+        width: 150px;
+    }
+
+    .sidebar-brand {
+        gap: 8px;
+        padding: 20px 12px;
+        font-size: 14px;
+    }
+
+    .menu-link {
+        gap: 8px;
+        padding: 0 12px;
+        font-size: 12px;
+    }
+}

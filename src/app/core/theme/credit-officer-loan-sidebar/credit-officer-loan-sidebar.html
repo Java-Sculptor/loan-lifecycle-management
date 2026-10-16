@@ -1,0 +1,32 @@
+<aside class="loan-officer-sidebar">
+    <div class="sidebar-brand">
+        <i class="bi bi-bank"></i>
+        <span>Loan Officer</span>
+    </div>
+
+    <nav aria-label="Loan officer navigation">
+        <a routerLink="/officer/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+            class="menu-link">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a routerLink="/officer/pending-applications" routerLinkActive="active" class="menu-link">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Pending Applications</span>
+        </a>
+        <a routerLink="/officer/loan-processing" routerLinkActive="active" class="menu-link">
+            <i class="bi bi-bank"></i>
+            <span>Loan Processing</span>
+        </a>
+        <a routerLink="/officer/eligibility" routerLinkActive="active" class="menu-link">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Eligibility Review</span>
+        </a>
+
+        <a routerLink="/officer/scorecard" routerLinkActive="active" class="menu-link">
+            <i class="bi bi-card-checklist"></i>
+            <span>Scorecard Review</span>
+        </a>
+    </nav>
+</aside>

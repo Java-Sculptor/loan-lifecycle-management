@@ -1,0 +1,166 @@
+<div class="loan-layout">
+    <app-loan-sidebar></app-loan-sidebar>
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">LOAN MANAGEMENT</span>
+                <h1>Loan Account</h1>
+                <p>View your disbursement details, EMI and outstanding balance.</p>
+            </div>
+        </header>
+
+        <section class="account-form">
+            <div class="card-heading">
+                <div class="heading-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+
+                <div>
+                    <h2>Find Your Loan Account</h2>
+                    <p>Enter the application ID associated with your disbursed loan.</p>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="applicationId">Loan Application ID</label>
+                <input id="applicationId" type="number" min="1" step="1" placeholder="e.g. 6"
+                    [value]="applicationIdInput" (input)="onApplicationIdChange($any($event.target).value)" />
+                <small>Find your application ID in My Applications.</small>
+            </div>
+
+            <button type="button" class="primary-button" (click)="loadLoanAccount()" [disabled]="isLoading">
+                <i class="bi bi-search"></i>
+                {{ isLoading ? 'Loading Account...' : 'View Loan Account' }}
+            </button>
+
+            @if (isLoading) {
+            <div class="message-box loading-message" role="status">
+                Fetching your loan account details...
+            </div>
+            }
+
+            @if (errorMessage) {
+            <div class="message-box error-message" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                {{ errorMessage }}
+            </div>
+            }
+
+            @if (successMessage) {
+            <div class="message-box success-message" role="status">
+                <i class="bi bi-check-circle"></i>
+                {{ successMessage }}
+            </div>
+            }
+        </section>
+
+        @if (account; as loan) {
+        <section class="account-result">
+            <header class="result-header">
+                <div class="account-icon">
+                    <i class="bi bi-bank"></i>
+                </div>
+
+                <div class="account-title">
+                    <span class="page-eyebrow">LOAN ACCOUNT DETAILS</span>
+                    <h2>{{ loan.loanAccountNumber }}</h2>
+                    <p>Processing ID #{{ loan.processingId }}</p>
+                </div>
+
+                <span class="status-badge" [class.status-active]="loan.loanAccountStatus === 'ACTIVE'"
+                    [class.status-closed]="loan.loanAccountStatus === 'CLOSED'">
+                    {{ loan.loanAccountStatus }}
+                </span>
+            </header>
+
+            <div class="account-summary">
+                <article class="summary-tile">
+                    <span>Monthly EMI</span>
+                    <h3>
+                        {{ loan.monthlyEmi | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+                    </h3>
+                </article>
+
+                <article class="summary-tile">
+                    <span>Outstanding Amount</span>
+                    <h3>
+                        {{ loan.outstandingAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+                    </h3>
+                </article>
+
+                <article class="summary-tile">
+                    <span>Disbursed Amount</span>
+                    <h3>
+                        {{ loan.disbursedAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+                    </h3>
+                </article>
+
+                <article class="summary-tile">
+                    <span>Interest Rate</span>
+                    <h3>{{ loan.interestRate }}% p.a.</h3>
+                </article>
+            </div>
+
+            <section class="details-card">
+                <h3>Account Information</h3>
+
+                <div class="detail-row">
+                    <span>Loan Application ID</span>
+                    <strong>{{ loan.loanApplicationId ?? applicationIdInput }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Loan Account Number</span>
+                    <strong>{{ loan.loanAccountNumber }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Sanctioned Amount</span>
+                    <strong>
+                        {{ loan.sanctionedAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Reference</span>
+                    <strong>{{ loan.disbursementReference }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Status</span>
+                    <strong>{{ loan.disbursementStatus }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Sanction Status</span>
+                    <strong>{{ loan.sanctionStatus }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Loan Tenure</span>
+                    <strong>{{ loan.tenureMonths }} months</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Disbursement Date</span>
+                    <strong>{{ loan.disbursedAt | date:'dd MMM yyyy, h:mm a' }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Sanction Letter Number</span>
+                    <strong>{{ loan.sanctionLetterNumber }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Sanction Email</span>
+                    <span class="status-badge" [class.status-active]="loan.sanctionEmailSent"
+                        [class.status-pending]="!loan.sanctionEmailSent">
+                        {{ loan.sanctionEmailSent ? 'Sent' : 'Not Sent' }}
+                    </span>
+                </div>
+            </section>
+        </section>
+        }
+    </main>
+</div>

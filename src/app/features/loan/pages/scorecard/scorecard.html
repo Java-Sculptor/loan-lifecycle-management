@@ -1,0 +1,161 @@
+<div class="loan-layout">
+    @if (isOfficerView) {
+    <app-credit-officer-loan-sidebar></app-credit-officer-loan-sidebar>
+    } @else {
+    <app-loan-sidebar></app-loan-sidebar>
+    }
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">LOAN MANAGEMENT</span>
+                <h1>Loan Scorecard</h1>
+                <p>Review the credit assessment and decision for your loan application.</p>
+            </div>
+        </header>
+
+        <section class="scorecard-form">
+            <div class="card-heading">
+                <div class="heading-icon">
+                    <i class="bi bi-clipboard-data"></i>
+                </div>
+
+                <div>
+                    <h2>Scorecard Assessment</h2>
+                    <p>Enter an existing loan application ID to continue.</p>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="applicationId">Loan Application ID</label>
+
+                <input id="applicationId" type="number" min="1" step="1" placeholder="e.g. 5"
+                    [value]="applicationIdInput" (input)="onApplicationIdChange($any($event.target).value)" />
+
+                <small>
+                    Find the ID in your My Applications page.
+                </small>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="primary-button" (click)="generateScorecard()" [disabled]="isLoading">
+                    <i class="bi bi-file-earmark-check"></i>
+                    Generate Scorecard
+                </button>
+
+                <button type="button" class="secondary-button" (click)="loadExistingScorecard()" [disabled]="isLoading">
+                    View Existing Scorecard
+                </button>
+            </div>
+
+            @if (isLoading) {
+            <div class="message-box loading-message" role="status">
+                <i class="bi bi-arrow-repeat"></i>
+                Processing scorecard request...
+            </div>
+            }
+
+            @if (errorMessage) {
+            <div class="message-box error-message" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                {{ errorMessage }}
+            </div>
+            }
+
+            @if (successMessage) {
+            <div class="message-box success-message" role="status">
+                <i class="bi bi-check-circle"></i>
+                {{ successMessage }}
+            </div>
+            }
+        </section>
+
+        @if (result; as scorecard) {
+        <section class="scorecard-result">
+            <div class="result-header">
+                <div>
+                    <span class="page-eyebrow">CREDIT ASSESSMENT</span>
+                    <h2>Scorecard #{{ scorecard.scorecardId }}</h2>
+
+                    <p>
+                        {{
+                        scorecard.loanType === 'HOME_LOAN'
+                        ? 'Home Loan'
+                        : scorecard.loanType === 'VEHICLE_LOAN'
+                        ? 'Vehicle Loan'
+                        : scorecard.loanType
+                        }}
+                        · {{ scorecard.employmentType }}
+                    </p>
+                </div>
+
+                <span class="status-badge" [class.status-approved]="scorecard.status === 'APPROVED'"
+                    [class.status-rejected]="scorecard.status === 'REJECTED'">
+                    {{ scorecard.status }}
+                </span>
+            </div>
+
+            <div class="scorecard-grid">
+                <article class="detail-tile">
+                    <span>CIBIL Score</span>
+                    <h3>{{ scorecard.cibilScore }}</h3>
+                </article>
+
+                <article class="detail-tile">
+                    <span>Requested Amount</span>
+                    <h3>
+                        {{
+                        scorecard.requestedAmount
+                        | currency:'INR':'symbol':'1.0-0':'en-IN'
+                        }}
+                    </h3>
+                </article>
+
+                <article class="detail-tile">
+                    <span>Eligible Amount</span>
+                    <h3>
+                        {{
+                        scorecard.eligibleAmount
+                        | currency:'INR':'symbol':'1.0-0':'en-IN'
+                        }}
+                    </h3>
+                </article>
+
+                <article class="detail-tile">
+                    <span>Employment Type</span>
+                    <h3>{{ scorecard.employmentType }}</h3>
+                </article>
+            </div>
+
+            <div class="assessment-details">
+                <h3>Assessment Details</h3>
+
+                <div class="detail-row">
+                    <span>Loan Type</span>
+                    <strong>{{ scorecard.loanType }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Scorecard Status</span>
+                    <strong>{{ scorecard.status }}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Generated At</span>
+                    <strong>
+                        {{
+                        scorecard.generatedAt
+                        | date:'dd MMM yyyy, h:mm a'
+                        }}
+                    </strong>
+                </div>
+
+                <div class="remarks">
+                    <span>Assessment Remarks</span>
+                    <p>{{ scorecard.remarks || 'No remarks provided.' }}</p>
+                </div>
+            </div>
+        </section>
+        }
+    </main>
+</div>

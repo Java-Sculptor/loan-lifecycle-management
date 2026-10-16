@@ -1,0 +1,322 @@
+<div class="loan-layout">
+    <app-credit-officer-loan-sidebar></app-credit-officer-loan-sidebar>
+
+    <main class="loan-content">
+        <header class="page-header">
+            <div>
+                <span class="page-eyebrow">CREDIT OPERATIONS</span>
+                <h1>Pending Loan Applications</h1>
+                <p>Review customer applications, verify documents, and record your decision.</p>
+            </div>
+
+            <button type="button" class="refresh-button" (click)="loadPendingApplications()" [disabled]="isLoading">
+                <i class="bi bi-arrow-clockwise"></i>
+                {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+            </button>
+        </header>
+
+        <!-- Summary -->
+        <section class="summary-card">
+            <div class="summary-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div>
+                <span>Applications Awaiting Review</span>
+                <h2>{{ pendingApplications.length }}</h2>
+            </div>
+        </section>
+
+        <!-- Feedback messages -->
+        @if (successMessage) {
+        <div class="feedback-message success-message" role="status">
+            <i class="bi bi-check-circle"></i>
+            {{ successMessage }}
+        </div>
+        }
+
+        @if (errorMessage) {
+        <div class="feedback-message error-message" role="alert">
+            <i class="bi bi-exclamation-circle"></i>
+            {{ errorMessage }}
+        </div>
+        }
+
+        <!-- Loading -->
+        @if (isLoading) {
+        <section class="state-card">
+            <i class="bi bi-arrow-repeat"></i>
+            <p>Loading pending applications...</p>
+        </section>
+        }
+
+        <!-- Empty state -->
+        @else if (pendingApplications.length === 0) {
+        <section class="state-card">
+            <i class="bi bi-check2-circle"></i>
+            <h3>No Pending Applications</h3>
+            <p>There are currently no applications awaiting Credit Officer review.</p>
+        </section>
+        }
+
+        <!-- Pending applications table -->
+        @else {
+        <section class="applications-section">
+            <div class="section-heading">
+                <div>
+                    <h2>Applications Queue</h2>
+                    <p>Review each application before making an approval decision.</p>
+                </div>
+
+                <span class="record-count">
+                    {{ pendingApplications.length }} pending
+                </span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Customer</th>
+                            <th>Loan Type</th>
+                            <th>Requested Amount</th>
+                            <th>CIBIL Score</th>
+                            <th>Documents</th>
+                            <th>Submitted On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (
+                        application of pendingApplications;
+                        track application.loanApplicationId
+                        ) {
+                        <tr>
+                            <td class="application-id">
+                                #{{ application.loanApplicationId }}
+                            </td>
+
+                            <td>
+                                <strong class="customer-name">
+                                    {{ application.customerName || 'Customer' }}
+                                </strong>
+                                <small class="customer-reference">
+                                    Customer ID: {{ application.customerId }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <div class="loan-type">
+                                    <i class="bi" [class.bi-house-door]="application.loanType === 'HOME_LOAN'"
+                                        [class.bi-car-front]="application.loanType === 'VEHICLE_LOAN'">
+                                    </i>
+
+                                    {{
+                                    application.loanType === 'HOME_LOAN'
+                                    ? 'Home Loan'
+                                    : 'Vehicle Loan'
+                                    }}
+                                </div>
+                            </td>
+
+                            <td class="amount">
+                                {{
+                                application.requestedAmount
+                                | currency:'INR':'symbol':'1.0-0':'en-IN'
+                                }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ application.cibilScore ?? '—' }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="status-badge"
+                                    [class.status-verified]="application.documentVerificationStatus === 'VERIFIED'"
+                                    [class.status-rejected]="application.documentVerificationStatus === 'REJECTED'"
+                                    [class.status-pending]="application.documentVerificationStatus === 'PENDING'">
+                                    {{ application.documentVerificationStatus }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ application.appliedAt | date:'dd MMM yyyy' }}
+                            </td>
+
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="button-secondary"
+                                        (click)="viewApplication(application)">
+                                        View
+                                    </button>
+
+                                    <button type="button" class="button-verify" (click)="verifyDocuments(application)"
+                                        [disabled]="
+                          actingApplicationId === application.loanApplicationId ||
+                          application.documentVerificationStatus === 'VERIFIED' ||
+                          application.documentVerificationStatus === 'REJECTED'
+                        ">
+                                        {{
+                                        application.documentVerificationStatus === 'VERIFIED'
+                                        ? 'Verified'
+                                        : actingApplicationId === application.loanApplicationId
+                                        ? 'Processing...'
+                                        : 'Verify Docs'
+                                        }}
+                                    </button>
+
+                                    <button type="button" class="button-approve"
+                                        (click)="approveApplication(application)" [disabled]="
+                          actingApplicationId === application.loanApplicationId ||
+                          application.documentVerificationStatus !== 'VERIFIED'
+                        ">
+                                        Approve
+                                    </button>
+
+                                    <button type="button" class="button-reject" (click)="openRejectionForm(application)"
+                                        [disabled]="
+                          actingApplicationId === application.loanApplicationId
+                        ">
+                                        Reject
+                                    </button>
+                                </div>
+
+                                @if (application.documentVerificationStatus !== 'VERIFIED') {
+                                <small class="action-hint">
+                                    Verify documents before approval.
+                                </small>
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        }
+
+        <!-- Selected application details -->
+        @if (selectedApplication; as application) {
+        <section class="details-card">
+            <div class="section-heading">
+                <div>
+                    <span class="page-eyebrow">APPLICATION DETAILS</span>
+                    <h2>Application #{{ application.loanApplicationId }}</h2>
+                </div>
+
+                <button type="button" class="close-button" (click)="closeApplicationDetails()"
+                    aria-label="Close application details">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span>Customer Name</span>
+                    <strong>{{ application.customerName }}</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Customer ID</span>
+                    <strong>{{ application.customerId }}</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Loan Type</span>
+                    <strong>
+                        {{
+                        application.loanType === 'HOME_LOAN'
+                        ? 'Home Loan'
+                        : 'Vehicle Loan'
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Requested Amount</span>
+                    <strong>
+                        {{
+                        application.requestedAmount
+                        | currency:'INR':'symbol':'1.2-2':'en-IN'
+                        }}
+                    </strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Interest Rate</span>
+                    <strong>{{ application.interestRate }}% p.a.</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Tenure</span>
+                    <strong>{{ application.tenureMonths }} months</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>CIBIL Score</span>
+                    <strong>{{ application.cibilScore ?? 'Not available' }}</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Document Verification</span>
+                    <strong>{{ application.documentVerificationStatus }}</strong>
+                </div>
+
+                <div class="detail-item">
+                    <span>Application Date</span>
+                    <strong>{{ application.appliedAt | date:'dd MMM yyyy, h:mm a' }}</strong>
+                </div>
+            </div>
+
+            <div class="detail-note">
+                <i class="bi bi-info-circle"></i>
+                Verify the supporting documents before approving the application.
+            </div>
+        </section>
+        }
+
+        <!-- Rejection form -->
+        @if (rejectionApplicationId !== null) {
+        <section class="rejection-card">
+            <div class="section-heading">
+                <div>
+                    <span class="page-eyebrow">CREDIT DECISION</span>
+                    <h2>Reject Application #{{ rejectionApplicationId }}</h2>
+                    <p>Enter a clear reason that can be communicated to the customer.</p>
+                </div>
+            </div>
+
+            <form (ngSubmit)="confirmRejection()">
+                <div class="form-field">
+                    <label for="rejectionReason">Rejection Reason</label>
+
+                    <textarea id="rejectionReason" name="rejectionReason" [(ngModel)]="rejectionReason" required
+                        minlength="1" maxlength="1000" rows="4"
+                        placeholder="Explain why this application is being rejected...">
+            </textarea>
+
+                    <small>{{ rejectionReason.length }}/1000 characters</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="button-secondary" (click)="cancelRejection()"
+                        [disabled]="actingApplicationId !== null">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="button-reject" [disabled]="
+                !rejectionReason.trim() ||
+                rejectionReason.trim().length > 1000 ||
+                actingApplicationId !== null
+              ">
+                        {{ actingApplicationId !== null ? 'Processing...' : 'Confirm Rejection' }}
+                    </button>
+                </div>
+            </form>
+        </section>
+        }
+    </main>
+</div>

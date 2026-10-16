@@ -1,0 +1,259 @@
+<div class="loan-layout">
+  <app-loan-sidebar></app-loan-sidebar>
+
+  <main class="loan-content">
+    <a routerLink="/loan" class="back-link">← Back to Loan Services</a>
+
+    <header class="page-header">
+      <h1>Apply for a Loan</h1>
+      <p>Review your loan details, check the estimated EMI, and submit your application.</p>
+    </header>
+
+    @if (isLoading) {
+    <p>Loading available loan deals...</p>
+    } @else {
+    <section class="form-card">
+      <form [formGroup]="form" (ngSubmit)="submitApplication()">
+
+        <!-- Loan selection -->
+        <h2>Loan Details</h2>
+
+        <div class="form-field">
+          <label for="loanDealId">Loan Type</label>
+          <select id="loanDealId" formControlName="loanDealId">
+            @for (deal of loanDeals; track deal.loanDealId) {
+            <option [ngValue]="deal.loanDealId">
+              {{ deal.loanType === 'HOME_LOAN' ? 'Home Loan' : 'Vehicle Loan' }}
+              — {{ deal.interestRate }}% p.a.
+            </option>
+            }
+          </select>
+        </div>
+
+        @if (selectedDeal; as deal) {
+        <div class="selected-deal">
+          <span>Maximum Loan Amount</span>
+          <strong>
+            {{ deal.maxLoanAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+          </strong>
+
+          <span>Maximum Tenure</span>
+          <strong>{{ deal.maxTenureMonths }} months</strong>
+
+          <span>Annual Interest Rate</span>
+          <strong>{{ deal.interestRate }}%</strong>
+        </div>
+
+        <div class="form-field">
+          <label for="requestedAmount">Requested Amount (₹)</label>
+          <input id="requestedAmount" type="number" formControlName="requestedAmount" min="1"
+            [attr.max]="deal.maxLoanAmount" />
+
+          <small>
+            Maximum:
+            {{ deal.maxLoanAmount | currency:'INR':'symbol':'1.0-0':'en-IN' }}
+          </small>
+
+          @if (form.controls.requestedAmount.touched &&
+          form.controls.requestedAmount.invalid) {
+          <small class="error-message">
+            Enter a valid loan amount greater than zero.
+          </small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="tenureMonths">Loan Tenure (months)</label>
+          <input id="tenureMonths" type="number" formControlName="tenureMonths" min="1"
+            [attr.max]="deal.maxTenureMonths" />
+
+          <small>Maximum {{ deal.maxTenureMonths }} months.</small>
+
+          @if (form.controls.tenureMonths.touched &&
+          form.controls.tenureMonths.invalid) {
+          <small class="error-message">
+            Enter a valid tenure greater than zero.
+          </small>
+          }
+        </div>
+        }
+
+        <!-- Customer -->
+        <h2>Customer Details</h2>
+
+        <div class="form-field">
+          <label for="customerId">Customer ID</label>
+          <input id="customerId" type="number" formControlName="customerId" min="1" />
+          <small>
+            Enter an existing customer ID. The CIBIL score is retrieved from the backend.
+          </small>
+
+          @if (form.controls.customerId.touched &&
+          form.controls.customerId.invalid) {
+          <small class="error-message">
+            Enter a valid customer ID.
+          </small>
+          }
+        </div>
+
+        <!-- Automatic CIBIL -->
+        <section class="selected-deal cibil-section">
+          <div>
+            <span>Customer CIBIL Score</span>
+
+            @if (isLoadingCibil) {
+            <p>Fetching CIBIL score...</p>
+            } @else if (cibilScore !== null) {
+            <strong>{{ cibilScore }}</strong>
+            <p>The score was retrieved from the backend.</p>
+            } @else {
+            <p>CIBIL score is not available yet.</p>
+            }
+
+            @if (cibilError) {
+            <small class="error-message" role="alert">
+              {{ cibilError }}
+            </small>
+            }
+          </div>
+
+          <button type="button" (click)="loadCibilScore()" [disabled]="isLoadingCibil">
+            {{ isLoadingCibil ? 'Checking...' : 'Refresh CIBIL' }}
+          </button>
+        </section>
+
+        <!-- Bank details -->
+        <h2>Bank Details</h2>
+
+        <div class="form-field">
+          <label for="bankName">Bank Name</label>
+          <input id="bankName" type="text" formControlName="bankName" maxlength="100" placeholder="Enter bank name"
+            autocomplete="organization" />
+
+          @if (form.controls.bankName.touched &&
+          form.controls.bankName.invalid) {
+          <small class="error-message">
+            Bank name is required.
+          </small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="bankAccountNumber">Bank Account Number</label>
+          <input id="bankAccountNumber" type="password" formControlName="bankAccountNumber" inputmode="numeric"
+            autocomplete="off" minlength="9" maxlength="18" placeholder="Enter account number" />
+
+          <small>Enter 9–18 digits.</small>
+
+          @if (form.controls.bankAccountNumber.touched &&
+          form.controls.bankAccountNumber.invalid) {
+          <small class="error-message">
+            Enter a valid account number containing 9–18 digits.
+          </small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="ifscCode">IFSC Code</label>
+          <input id="ifscCode" type="text" formControlName="ifscCode" maxlength="11" placeholder="e.g. SBIN0001234"
+            autocomplete="off" style="text-transform: uppercase" />
+
+          <small>Enter the 11-character bank IFSC code.</small>
+
+          @if (form.controls.ifscCode.touched &&
+          form.controls.ifscCode.invalid) {
+          <small class="error-message">
+            Enter a valid IFSC code.
+          </small>
+          }
+        </div>
+
+        <!-- EMI day -->
+        <h2>Repayment Preference</h2>
+
+        <div class="form-field">
+          <label for="emiDay">Preferred EMI Payment Day</label>
+          <select id="emiDay" formControlName="emiDay">
+            <option [ngValue]="1">1st of each month</option>
+            <option [ngValue]="5">5th of each month</option>
+            <option [ngValue]="7">7th of each month</option>
+            <option [ngValue]="10">10th of each month</option>
+            <option [ngValue]="15">15th of each month</option>
+          </select>
+          <small>The selected day will be saved with your application.</small>
+        </div>
+
+        <!-- EMI preview -->
+        <h2>Estimated EMI</h2>
+
+        <section class="selected-deal emi-preview">
+          @if (isCalculatingEmi) {
+          <p>Calculating estimated EMI...</p>
+          } @else if (emiPreview; as emi) {
+          <span>Monthly EMI</span>
+          <strong>
+            {{ emi.monthlyEmi | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+          </strong>
+
+          <span>Principal Amount</span>
+          <strong>
+            {{ emi.principalAmount | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+          </strong>
+
+          <span>Total Interest</span>
+          <strong>
+            {{ emi.totalInterest | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+          </strong>
+
+          <span>Total Repayment</span>
+          <strong>
+            {{ emi.totalPayment | currency:'INR':'symbol':'1.2-2':'en-IN' }}
+          </strong>
+
+          <small>
+            Estimate based on the selected loan deal, amount, and tenure.
+            Final loan terms are subject to approval.
+          </small>
+          } @else {
+          <p>Enter a valid amount and tenure to calculate your EMI.</p>
+          }
+
+          @if (emiError) {
+          <small class="error-message" role="alert">
+            {{ emiError }}
+          </small>
+          }
+        </section>
+
+        <!-- Feedback -->
+        @if (errorMessage) {
+        <p class="error-message" role="alert">{{ errorMessage }}</p>
+        }
+
+        @if (successMessage && createdApplication) {
+        <div class="success-message" role="status">
+          <h3>{{ successMessage }}</h3>
+          <p>
+            Application ID:
+            <strong>{{ createdApplication.loanApplicationId }}</strong>
+          </p>
+          <p>Status: {{ createdApplication.status }}</p>
+          <p>
+            Document verification:
+            {{ createdApplication.documentVerificationStatus }}
+          </p>
+          <a routerLink="/loan/my-applications">
+            View My Applications
+          </a>
+        </div>
+        }
+
+        <button type="submit" [disabled]="isSubmitting || isLoading || loanDeals.length === 0">
+          {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
+        </button>
+
+      </form>
+    </section>
+    }
+  </main>
+</div>
