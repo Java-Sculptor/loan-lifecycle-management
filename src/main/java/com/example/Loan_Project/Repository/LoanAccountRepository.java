@@ -6,18 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface LoanAccountRepository
-        extends JpaRepository<LoanAccount, Long> {
+public interface LoanAccountRepository extends JpaRepository<LoanAccount, Long> {
 
-    Optional<LoanAccount> findByLoanApplication_LoanApplicationId(
-            Long loanApplicationId
-    );
+    Optional<LoanAccount> findByLoanApplication_LoanApplicationId(Long loanApplicationId);
 
-    Optional<LoanAccount> findByLoanAccountNo(
-            String loanAccountNo
-    );
+    Optional<LoanAccount> findByLoanAccountNo(String loanAccountNo);
 
-    List<LoanAccount> findByCustomer_CustomerIdOrderByActivatedAtDesc(
-            Long customerId
-    );
+    List<LoanAccount> findByCustomer_CustomerIdOrderByActivatedAtDesc(Long customerId);
 }

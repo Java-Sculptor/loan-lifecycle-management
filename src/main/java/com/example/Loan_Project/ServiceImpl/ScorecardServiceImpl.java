@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class ScorecardServiceImpl implements ScorecardService {
+public class
+ScorecardServiceImpl implements ScorecardService {
 
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanEligibilityRepository loanEligibilityRepository;

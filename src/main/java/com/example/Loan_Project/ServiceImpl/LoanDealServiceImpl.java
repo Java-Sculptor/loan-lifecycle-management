@@ -27,8 +27,6 @@ public class LoanDealServiceImpl implements LoanDealService {
             throw new IllegalArgumentException("Loan type is required");
         }
 
-        // Always assign the interest rate on the backend.
-        // Never trust the rate supplied by the client.
         switch (loanDeal.getLoanType()) {
             case HOME_LOAN ->
                     loanDeal.setInterestRate(new BigDecimal("15.00"));
