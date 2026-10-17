@@ -38,7 +38,6 @@ export class LoanList implements OnInit {
         this.loanDeals = deals;
         this.isLoading = false;
 
-        // Ask Angular to refresh the page after the API response.
         this.cdr.markForCheck();
       },
       error: error => {
